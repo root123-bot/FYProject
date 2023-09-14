@@ -1,0 +1,155 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Complete Profile</title>
+    
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+
+    <link
+      href="https://fonts.googleapis.com/css?family=Lato:300,400,700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+
+    <link rel="stylesheet" href="{%static 'Hospital/css/login.css'%}" />
+  </head>
+  <body>
+    <section class="ftco-section">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-12 col-lg-10">
+            <div class="wrap d-md-flex">
+              <div
+                class="img"
+                style="background-image: url({% static 'Hospital/assets/img/gallery/about1.png' %});"></div>
+              <div class="login-wrap p-4 p-md-5">
+                <div class="d-flex">
+                  <div class="w-100">
+                    <small id="flashmessage" style="display: block; margin: 0; padding: 0; background-color: green; border-radius: 5px; color: white; padding: 2px; text-align: center">Your account have been created successful</small>
+                    <h3 class="mb-4">Complete Profile</h3>
+                  </div>
+                  
+                </div>
+                <form method="POST" class="signin-form" id="sign-form" enctype="multipart/form-data">
+                   {% csrf_token %}
+                  <div class="form-group mb-3">
+                    <label class="label" for="name">Hospital Name</label>
+                    <input
+                      name="brand"
+                      id="brandname"
+                      type="text"
+                      class="form-control"
+                      placeholder="Username"
+                      required
+                    />
+                  </div>
+                  <div class="form-group mb-3" style="margin-bottom: 0; padding-bottom: 0;">
+                    <label class="label my-0 py-0" for="password">Physical Address</label>
+                    <small style="display: block; margin: 0; padding: 0">Street Address, City, State</small>
+                    <input
+                      name="address"
+                      id="address"
+                      class="form-control"
+                      placeholder="Kombo, Vingunguti"
+                      required
+                    />
+                  </div>
+                  
+                  <div class="form-group mb-3" style="margin-bottom: 0; padding-bottom: 0;">
+                    <label class="label my-0 py-0">Upload Logo/picture</label>
+                    <small style="display: block; margin: 0; padding: 0">Click box below to select file</small>
+                    <input accept="image/*" type="file" id="logo" style="display: none", name="logo" />
+                    <label for="logo" style="width: 200px; height: 150px; background-color: grey; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                        <img id="loadedimg" src="{% static 'Hospital/images/add-image.png' %}" alt="logo" style="width: 80px; height: 80px; object-position: center; z-index: 1000;"/>
+                    </label>
+                  </div>
+                  <div class="form-group">
+                    <button
+                      type="submit"
+                      class="form-control btn btn-secondary rounded submit px-3"
+                      style="background: #0f61ef; color: #fff"
+
+                    >
+                      Submit
+                    </button>
+                  </div>
+                  
+                </form>
+                
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <script>
+      
+      photo = document.getElementById("logo");
+      photolabel = photo.nextSibling.nextSibling;
+      console.log('photo ', photo, photolabel)
+      photo.addEventListener("change", ({ target }) => {
+        console.log("changed ");
+        const file = target.files[0];
+        let loadedimg = document.getElementById("loadedimg");
+        if (file && file.type.substr(0, 5) === "image") {
+          const reader = new FileReader();
+          loadedimg.parentNode.removeChild(loadedimg);
+          reader.onloadend = () => {
+            img = document.createElement("img");
+            img.id = "loadedimg";
+            img.src = reader.result;
+            img.style.width = "100%";
+            img.style.height = "100%";
+            photolabel.appendChild(img);
+          };
+          reader.readAsDataURL(file);
+        } else {
+          loadedimg.parentNode.removeChild(loadedimg);
+          img = document.createElement("img");
+          img.id = "loadedimg";
+          img.src = "{% static 'mkulima/images/error.png' %}";
+          img.style.width = "100%";
+          img.style.height = "100%";
+          photolabel.appendChild(img);
+        }
+      });
+
+    </script>
+    <script>
+      const flashElem = document.getElementById("flashmessage")
+
+      setTimeout(() => {
+        flashElem.style.display = "none"
+      }, [2500])
+    </script>
+
+    <script>
+      const formElem = document.getElementById("sign-form")
+      const addressElem = document.getElementById("address")
+      const brandElem = document.getElementById("brandname")
+      const logoElem = document.getElementById("logo")
+      const logoElem = document.getElementById("doctors")
+      formElem.addEventListener("submit", (_) => {
+        _.preventDefault()
+        console.log('form to submit ', addressElem.value, brandElem.value, logoElem.value)
+
+
+        formElem.submit()
+      })
+    </script>
+    {% comment %} <script src={% static 'hospital/js/previewimage.js' %}></script> {% endcomment %}
+    <script src="js/jquery.min.js"></script>
+    <script src="js/popper.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>

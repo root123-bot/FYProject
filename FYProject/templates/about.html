@@ -1,0 +1,177 @@
+{% load static %}
+<!DOCTYPE html>
+<html class="no-js" lang="zxx">
+  <head>
+    <meta charset="utf-8" >
+    <meta http-equiv="x-ua-compatible" content="ie=edge" >
+    <title>Medicare</title>
+    <meta name="description" content="" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <link rel="manifest" href="site.webmanifest" >
+    <link
+      rel="shortcut icon"
+      type="image/x-icon"
+      href={% static "Hospital/assets/img/favicon.ico" %}
+    >
+
+    <!-- CSS here -->
+    <link rel="stylesheet" href={% static 'Hospital/assets/css/bootstrap.min.css' %} >
+    <link rel="stylesheet" href={% static 'Hospital/assets/css/owl.carousel.min.css' %} >
+    <link rel="stylesheet" href={% static 'Hospital/assets/css/slicknav.css' %} >
+    <link rel="stylesheet" href={% static 'Hospital/assets/css/flaticon.css' %}> 
+    <link rel="stylesheet" href={% static 'Hospital/assets/css/gijgo.css' %}> 
+    <link rel="stylesheet" href={% static 'Hospital/assets/css/animate.min.css' %} > 
+    <link rel="stylesheet" href={% static 'Hospital/assets/css/animated-headline.css' %} > 
+    <link rel="stylesheet" href={% static 'Hospital/assets/css/magnific-popup.css' %} > 
+    <link rel="stylesheet" href={% static 'Hospital/assets/css/fontawesome-all.min.css' %}>  
+    <link rel="stylesheet" href={% static 'Hospital/assets/css/themify-icons.css' %} > 
+    <link rel="stylesheet" href={% static 'Hospital/assets/css/slick.css' %} > 
+    <link rel="stylesheet" href={% static 'Hospital/assets/css/nice-select.css' %}>
+    <link rel="stylesheet" href={% static 'Hospital/assets/css/style.css' %}>
+  </head>
+  <body>
+    <!-- ? Preloader Start -->
+    <div id="preloader-active">
+      <div class="preloader d-flex align-items-center justify-content-center">
+        <div class="preloader-inner position-relative">
+          <div class="preloader-circle"></div>
+          <div class="preloader-img pere-text">
+            <img  src={% static 'Hospital/assets/img/logo/loder.png' %} alt="" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Preloader Start -->
+    <header>
+      <!--? Header Start -->
+      <div class="header-area">
+        <div class="main-header header-sticky">
+          <div class="container-fluid">
+            <div class="row align-items-center">
+              <!-- Logo -->
+              <div class="col-xl-2 col-lg-2 col-md-1">
+                <div class="logo">
+                  <a href="/"
+                    ><img src={% static 'Hospital/assets/img/logo/logo.png' %}
+                    alt="" /></a
+                  >
+                </div>
+              </div>
+              <div class="col-xl-10 col-lg-10 col-md-10">
+                <div
+                  class="menu-main d-flex align-items-center justify-content-end"
+                >
+                  <!-- Main-menu -->
+                  <div class="main-menu f-right d-none d-lg-block">
+                    <nav>
+                      <ul id="navigation">
+                        <li><a href="/"></a></li>
+                        <li><a href="/"></a></li>
+                       
+                        <li><a href="/"></a></li>
+                      </ul>
+                    </nav>
+                  </div>
+                  <div class="header-right-btn f-right d-none d-lg-block ml-30">
+                    <a href={% url 'login' %} class="btn header-btn">Login</a>
+                  </div>
+                </div>
+              </div>
+              <!-- Mobile Menu -->
+              <div class="col-12">
+                <div class="mobile_menu d-block d-lg-none"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Header End -->
+    </header>
+
+    <main>
+      <!--? About Start-->
+    <div class="about-area">
+      <div class="container">
+          <div class="row">
+              <div class="col-lg-6 col-md-10">
+                  <div class="about-caption mb-50">
+                      <!-- Section Tittle -->
+                      <div class="section-tittle section-tittle2 mb-35">
+                          <span>We Care About Your Health. </span>
+                          {% comment %} <h2>Welcome To Our Hospital</h2> {% endcomment %}
+                      </div>
+                      <p>Get an instant health service by looking for any health institution's location and traffic here.
+                        If u are a health institution, register and then log in so as to be added to our system</p>
+                      <div class="about-btn1 mb-30">
+                          <a href={% url 'locatehospital' %} class="btn about-btn">Find Hospitals .<i class="ti-arrow-right"></i></a>
+                      </div>
+                      <div class="about-btn1 mb-0">
+                          <a href={% url 'register' %} class="btn about-btn2">Create Account <i class="ti-arrow-right"></i></a>
+                      </div>
+                      <div style="margin-top: 0, padding-top: 0;">
+                        <p style="color: red; font-weight: bold; font-size: 14px; font-style: italic ">** Only for hospital</p>
+                      </div>
+                      
+                  </div>
+              </div>
+              <div class="col-lg-6 col-md-12">
+                  <!-- about-img -->
+                  <div class="about-img ">
+                      <div class="about-font-img d-none d-lg-block">
+                          <img src= {% static 'Hospital/assets/img/gallery/about2.png' %} alt="">
+                      </div>
+                      <div class="about-back-img ">
+                          <img src={% static 'Hospital/assets/img/gallery/about1.png' %} alt="">
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+  <!-- About  End-->
+    </main>
+    
+   
+   
+
+    <!-- JS here -->
+
+
+    <script src={% static 'Hospital/assets/js/vendor/modernizr-3.5.0.min.js' %}></script>
+    <!-- Jquery, Popper, Bootstrap -->
+    <script src={% static 'Hospital/assets/js/vendor/jquery-1.12.4.min.js' %}></script>
+    <script src={% static 'Hospital/assets/js/popper.min.js' %}></script>
+    <script src={% static 'Hospital/assets/js/bootstrap.min.js' %}></script>
+    <!-- Jquery Mobile Menu -->
+    <script src={% static 'Hospital/assets/js/jquery.slicknav.min.js' %}></script>
+
+    <!-- Jquery Slick , Owl-Carousel Plugins -->
+    <script src={% static 'Hospital/assets/js/owl.carousel.min.js' %}></script>
+    <script src={% static 'Hospital/assets/js/slick.min.js' %}></script>
+    <!-- One Page, Animated-HeadLin -->
+    <script src={% static 'Hospital/assets/js/wow.min.js' %}></script>
+    <script src={% static 'Hospital/assets/js/animated.headline.js' %}></script>
+    <script src={% static 'Hospital/assets/js/jquery.magnific-popup.js' %}></script>
+
+    <!-- Date Picker -->
+    <script src={% static 'Hospital/assets/js/gijgo.min.js' %}></script>
+    <!-- Nice-select, sticky -->
+    <script src={% static 'Hospital/assets/js/jquery.nice-select.min.js' %}></script>
+    <script src={% static 'Hospital/assets/js/jquery.sticky.js' %}></script>
+
+    <!-- counter , waypoint -->
+    <script src={% static 'Hospital/assets/js/jquery.counterup.min.js' %}></script>
+    <script src={% static 'Hospital/assets/js/waypoints.min.js' %}></script>
+    <script src={% static 'Hospital/assets/js/jquery.countdown.min.js' %}></script>
+    <!-- contact js -->
+    <script src={% static 'Hospital/assets/js/contact.js' %}></script>
+    <script src={% static 'Hospital/assets/js/jquery.form.js' %}></script>
+    <script src={% static 'Hospital/assets/js/jquery.validate.min.js' %}></script>
+    <script src={% static 'Hospital/assets/js/mail-script.js' %}></script>
+    <script src={% static 'Hospital/assets/js/jquery.ajaxchimp.min.js' %}></script>
+
+    <!-- Jquery Plugins, main Jquery -->
+    <script src={% static 'Hospital/assets/js/plugins.js' %}></script>
+    <script src={% static 'Hospital/assets/js/main.js' %}></script>
+  </body>
+</html>

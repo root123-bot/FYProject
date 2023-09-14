@@ -1,0 +1,7 @@
+
+# don't post the db
+db.sqlite3/
+
+# don't post the media and images
+media/
+images/
