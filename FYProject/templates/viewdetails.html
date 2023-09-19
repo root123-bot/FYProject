@@ -202,8 +202,9 @@
           } else {
             bookings = [booking]
           }
-
+          console.log('THIS IS THE BOOKING ', booking)
           localStorage.setItem("booking", JSON.stringify(booking))
+          return;
           formElem.submit()
 
         })
