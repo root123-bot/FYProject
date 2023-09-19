@@ -67,6 +67,7 @@
             <p style="margin-top: 0px; padding-top: 0px; margin-bottom: 0px; padding-bottom: 0px;"><span style="font-weight: bold;">Location: </span> {{metadata.address}}</p>
             <p style="margin-top: 0px; padding-top: 0px; margin-bottom: 0px; padding-bottom: 0px;"><span style="font-weight: bold;">Total patients in queue: </span> {{metadata.queue}}</p>
             <p style="margin-top: 0px; padding-top: 0px;"><span style="font-weight: bold;">Pending Bookings: </span> {{metadata.pbookings}}</p>
+            <!-- {{error}} -->
           </div>
         </div>
         <div>
@@ -114,7 +115,7 @@
         <img style="cursor: pointer;" id="closebtn" src="{% static 'Hospital/images/close.png'  %}" height="20px" width="20px" />
       </span>
       <hr />
-      <form method="POST" id=""add-booking>
+      <form method="POST" id="add-booking">
         {% csrf_token %}
         <div style="display: flex; justify-content: space-between;">
           <div class="mb-3 col-12 col-md-6 col-sm-12 col-lg-6 col-xl-6" style="width: 48%;">
@@ -178,7 +179,7 @@
         // const doctorInput = document.getElementById("doctor")
         // const departmentInput = document.getElementById("department")
         // const checkInput = document.getElementById("check")
-       
+        console.log('form element ', formElem)
         formElem.addEventListener("submit", (_) => {
           console.log("someone need to submit the form")
           _.preventDefault()
@@ -197,14 +198,13 @@
           }
           // let first add booking to existing bookings found in browser storage
           let bookings = JSON.parse(localStorage.getItem("booking"))
+          console.log('bookings ', bookings)
           if (bookings) {
             bookings.push(booking)
           } else {
             bookings = [booking]
           }
-          console.log('THIS IS THE BOOKING ', booking)
-          localStorage.setItem("booking", JSON.stringify(booking))
-          return;
+          localStorage.setItem("booking", JSON.stringify(bookings))
           formElem.submit()
 
         })
