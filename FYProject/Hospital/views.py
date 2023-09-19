@@ -13,70 +13,71 @@ from geopy.geocoders import Nominatim
 import json
 import datetime as dt
 
+
 def get_coords(address):
     while True:
+        print("im get called im stuck")
         try:
             geolocator = Nominatim(user_agent="hospital")
             location = geolocator.geocode(address)
+            print("That is resolved location ", location)
             return f"{location.latitude}, {location.longitude}"
         except:
             pass
 
 
-@require_http_methods(['HEAD', 'GET'])
+@require_http_methods(["HEAD", "GET"])
 def logoutuser(request):
     logout(request)
-    return redirect('/')
+    return redirect("/")
 
-   
+
 # Create your views here.
 class RegisterView(View):
     template_name = "register.html"
+
     def get(self, request):
         return render(request, self.template_name)
 
     def post(self, request):
-        print('IM POST IM EXECUTED')
-        password = request.POST['password']
-        user_group = request.POST.get('user_group', None)
-        email = request.POST.get('email')
+        print("IM POST IM EXECUTED")
+        password = request.POST["password"]
+        user_group = request.POST.get("user_group", None)
+        email = request.POST.get("email")
         print(password, user_group, email)
         try:
-            if (email and password and user_group):
+            if email and password and user_group:
                 password_hash = make_password(password)
                 user = get_user_model().objects.create(
-                    email = email,
-                    password = password_hash
+                    email=email, password=password_hash
                 )
 
                 user.save()
 
-                if(user_group == "customer"):
-                    normal_user = NormalUsers.objects.create(
-                        user = user
-                    )
+                if user_group == "customer":
+                    normal_user = NormalUsers.objects.create(user=user)
                     normal_user.save()
                     login(request, user)
 
-                elif (user_group == "Hospital"):
-                    hospital = Hospital.objects.create(
-                        user=user
-                    )
+                elif user_group == "Hospital":
+                    hospital = Hospital.objects.create(user=user)
                     hospital.save()
                     login(request, user)
-
-
 
                 return HttpResponseRedirect(reverse("completeprofilehospital"))
 
             else:
-                return render(request, self.template_name, {"error": "Missing some fields"})
-        
+                return render(
+                    request, self.template_name, {"error": "Missing some fields"}
+                )
+
         except Exception as error:
             print("Error ", str(error))
             return render(request, self.template_name, {"error": str(error)})
 
+
 register_view = RegisterView.as_view()
+
 
 class CompleteHospitalProfile(View):
     template_name = "completeHospitalProfile.html"
@@ -84,17 +85,18 @@ class CompleteHospitalProfile(View):
     @method_decorator(login_required(login_url="/login"))
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
-    
+
     def get(self, request):
         return render(request, self.template_name)
 
     def post(self, request):
         hospital = self.request.user.hospital
         try:
-            logo = request.FILES.get('logo', None)
-            address = request.POST.get('address', None)
-            brand = request.POST.get('brand', None)
-
+            logo = request.FILES.get("logo", None)
+            address = request.POST.get("address", None)
+            brand = request.POST.get("brand", None)
+            license = request.FILES.get("license", None)
+            hospital.license = license
             hospital.name = brand
             hospital.logo = logo
             hospital.physical_address = address
@@ -103,27 +105,31 @@ class CompleteHospitalProfile(View):
             hospital.is_profile_completed = True
             hospital.coords = get_coords(address)
             hospital.save()
-            
+
             return HttpResponseRedirect(reverse("waitingverification"))
-        
+
         except Exception as err:
             return render(request, self.template_name, {"errors": str(err)})
 
+
 complete_hospital_profile = CompleteHospitalProfile.as_view()
+
 
 class DeleteView(View):
     templat_name = "delete.html"
 
     def get(self, request, *args, **kwargs):
-        doctor_id = kwargs.get('did', None)
+        doctor_id = kwargs.get("did", None)
         if doctor_id:
-            doctor = Doctor.objects.get(id = int(doctor_id))
+            doctor = Doctor.objects.get(id=int(doctor_id))
             doctor.delete()
             return HttpResponseRedirect(reverse("dashboard"))
-        
+
         return render(request, self.template_name)
 
+
 delete_doctor = DeleteView.as_view()
+
 
 class MapView(View):
     template_name = "map.html"
@@ -135,28 +141,50 @@ class MapView(View):
         for hospital in hospitals:
             department_metadata = []
             for department in hospital.departments.all():
-                department_metadata.append({
-                    "name": department.name,
-                    "hospital": hospital.name,
-                    "id": hospital.id,
-                    "queue": department.patients.all().filter(status = "Pending").count(),
-                })
+                department_metadata.append(
+                    {
+                        "name": department.name,
+                        "hospital": hospital.name,
+                        "id": hospital.id,
+                        "queue": department.patients.all()
+                        .filter(status="Pending")
+                        .count(),
+                        "pbooking": department.bukings.all()
+                        .filter(status="Pending")
+                        .count(),
+                    }
+                )
 
-            hospital_metadata.append({
-                "name": hospital.name,
-                "coords": hospital.coords,
-                "logo": hospital.logo.url,
-                "queue": hospital.wagonjwa.all().filter(status = "Pending").count(),
-                "pbookings": hospital.bookings.all().filter(status = 'Pending').count(),
-                "id": hospital.id,
-                "totalDoctors": hospital.madokta.all().count(),
-                "department_metadata": department_metadata
-            })
+            print("THESE ARE DEPARTMENT METADATA ", department_metadata)
+
+            hospital_metadata.append(
+                {
+                    "name": hospital.name,
+                    "coords": hospital.coords,
+                    "logo": hospital.logo.url,
+                    "queue": hospital.wagonjwa.all().filter(status="Pending").count(),
+                    "pbookings": hospital.bookings.all()
+                    .filter(status="Pending")
+                    .count(),
+                    "id": hospital.id,
+                    "totalDoctors": hospital.madokta.all().count(),
+                    "department_metadata": department_metadata,
+                }
+            )
         print("Hospital metadata ", hospital_metadata)
-        
-        return render(request, self.template_name, {"dmetadata": json.dumps(department_metadata), "metadata": json.dumps(hospital_metadata)})
-    
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "dmetadata": json.dumps(department_metadata),
+                "metadata": json.dumps(hospital_metadata),
+            },
+        )
+
+
 map_view = MapView.as_view()
+
 
 class HospitalDashboard(View):
     template_name = "hospitalDashboard.html"
@@ -172,7 +200,7 @@ class HospitalDashboard(View):
         treated_today = 0
         queue_today = 0
         warded_today = 0
-        nhif_patients = patients.filter(is_using_NHIF = True).count()
+        nhif_patients = patients.filter(is_using_NHIF=True).count()
         today_nhif_patients = 0
         for patient in patients:
             print(patient.created_at.date(), dt.date.today())
@@ -180,7 +208,7 @@ class HospitalDashboard(View):
                 created_today += 1
                 if patient.status == "Treated":
                     treated_today += 1
-                
+
                 if patient.status == "Pending":
                     queue_today += 1
 
@@ -190,20 +218,30 @@ class HospitalDashboard(View):
                 if patient.is_using_NHIF:
                     today_nhif_patients += 1
 
-
         metadata = {
-            "created_today" : created_today,
-            "treated_today" : treated_today,
-            "queue_today" : queue_today,
+            "created_today": created_today,
+            "treated_today": treated_today,
+            "queue_today": queue_today,
             "hospitalized_today": warded_today,
             "nhif_patients": nhif_patients,
             "total_doctors": hospital.madokta.all().count(),
             "today_nhif_patients": today_nhif_patients,
             "total_departments": hospital.departments.all().count(),
         }
-        
-        print('patients ', metadata)
-        return render(request, self.template_name, {"metadata": metadata, "patients": patients, "infolen": patients.count(), "name": hospital.name, "logo": hospital.logo.url})
+
+        print("patients ", metadata)
+        return render(
+            request,
+            self.template_name,
+            {
+                "metadata": metadata,
+                "patients": patients,
+                "infolen": patients.count(),
+                "name": hospital.name,
+                "logo": hospital.logo.url,
+            },
+        )
+
 
 hospital_dashboard = HospitalDashboard.as_view()
 
@@ -214,14 +252,25 @@ class HospitalDepartments(View):
     @method_decorator(login_required(login_url="/login"))
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
-    
+
     def get(self, request):
         hospital = self.request.user.hospital
         departments = hospital.departments.all()
-        print('Departments ', departments)
-        return render(request, self.template_name, {"departments" : departments, "idadi": len(departments), "name": hospital.name, "logo": hospital.logo.url})
+        print("Departments ", departments)
+        return render(
+            request,
+            self.template_name,
+            {
+                "departments": departments,
+                "idadi": len(departments),
+                "name": hospital.name,
+                "logo": hospital.logo.url,
+            },
+        )
+
 
 hospital_departments = HospitalDepartments.as_view()
+
 
 class AddDepartment(View):
     template_name = "adddepartment.html"
@@ -229,29 +278,36 @@ class AddDepartment(View):
     @method_decorator(login_required(login_url="/login"))
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
-    
+
     def get(self, request):
         hospital = self.request.user.hospital
-        return render(request, self.template_name, {"name": hospital.name, "logo": hospital.logo.url})
+        return render(
+            request,
+            self.template_name,
+            {"name": hospital.name, "logo": hospital.logo.url},
+        )
 
     def post(self, request):
         hospital = self.request.user.hospital
         name = request.POST.get("name", None)
 
         try:
-            department = Department.objects.create(
-                hospital = hospital,
-                name = name
-            )
+            department = Department.objects.create(hospital=hospital, name=name)
 
             department.save()
 
             return HttpResponseRedirect(reverse("departments"))
-        
+
         except Exception as err:
-            return render(request, self.template_name, {"name": hospital.name, "logo": hospital.logo.url})
+            return render(
+                request,
+                self.template_name,
+                {"name": hospital.name, "logo": hospital.logo.url},
+            )
+
 
 add_department = AddDepartment.as_view()
+
 
 class DoctorsPanel(View):
     template_name = "doctors.html"
@@ -263,9 +319,20 @@ class DoctorsPanel(View):
     def get(self, request):
         hospital = self.request.user.hospital
         doctors = hospital.madokta.all()
-        return render(request, self.template_name, {"doctors": doctors, "infolen": doctors.count(), "name": hospital.name, "logo": hospital.logo.url})
+        return render(
+            request,
+            self.template_name,
+            {
+                "doctors": doctors,
+                "infolen": doctors.count(),
+                "name": hospital.name,
+                "logo": hospital.logo.url,
+            },
+        )
+
 
 doctor_panel = DoctorsPanel.as_view()
+
 
 class Booking(View):
     template_name = "booking.html"
@@ -274,14 +341,24 @@ class Booking(View):
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
 
-
     def get(self, request):
         hospital = self.request.user.hospital
         bookings = hospital.bookings.all()
 
-        return render(request, self.template_name, {"bookings": bookings, "infolen": bookings.count(), "name": hospital.name, "logo": hospital.logo.url})
+        return render(
+            request,
+            self.template_name,
+            {
+                "bookings": bookings,
+                "infolen": bookings.count(),
+                "name": hospital.name,
+                "logo": hospital.logo.url,
+            },
+        )
+
 
 bookings = Booking.as_view()
+
 
 class EditBooking(View):
     template_name = "editbooking.html"
@@ -290,26 +367,39 @@ class EditBooking(View):
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
 
-
     def get(self, request, *args, **kwargs):
         hospital = self.request.user.hospital
         booking_id = self.kwargs.get("bid")
         booking = HospitalBooking.objects.get(id=int(booking_id))
+        departments = hospital.departments.all()
 
-        return render(request, self.template_name, {"booking": booking, "name": hospital.name, "logo": hospital.logo.url})
-
+        return render(
+            request,
+            self.template_name,
+            {
+                "did": booking.department.id if booking.department else 1,
+                "departments": departments,
+                "booking": booking,
+                "name": hospital.name,
+                "logo": hospital.logo.url,
+            },
+        )
 
     def post(self, request, *args, **kwargs):
         name = request.POST.get("name")
+        phone = request.POST.get("phone")
         status = request.POST.get("status")
+        department = request.POST.get("department", None)
         try:
             booking_id = self.kwargs.get("bid")
             hospital = self.request.user.hospital
-
+            departments = hospital.departments.all()
             booking = HospitalBooking.objects.get(id=int(booking_id))
 
             booking.patient_name = name
             booking.status = status
+            booking.phone = phone
+            booking.department = Department.objects.get(id=int(department))
 
             booking.save()
 
@@ -317,7 +407,17 @@ class EditBooking(View):
 
         except Exception as err:
             print("THIS IS EXCEPTION OCCURED ", str(err))
-            return render(request, self.template_name, {"booking": booking, "name": hospital.name, "logo": hospital.logo.url})
+            return render(
+                request,
+                self.template_name,
+                {
+                    "departments": departments,
+                    "booking": booking,
+                    "name": hospital.name,
+                    "logo": hospital.logo.url,
+                },
+            )
+
 
 edit_booking = EditBooking.as_view()
 
@@ -331,53 +431,98 @@ class AddBooking(View):
 
     def get(self, request):
         hospital = self.request.user.hospital
-        return render(request, self.template_name, {"name": hospital.name, "logo": hospital.logo.url})
+        departments = hospital.departments.all()
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "departments": departments,
+                "name": hospital.name,
+                "logo": hospital.logo.url,
+            },
+        )
 
     def post(self, request):
         name = request.POST.get("name", None)
+        phone = request.POST.get("phone", None)
         hospital = self.request.user.hospital
+        department = request.POST.get("department", None)
+        departments = hospital.departments.all()
+
+        print("THESE ARE PHONE NUMBER ", phone)
         try:
             booking = HospitalBooking.objects.create(
-                patient_name = name,
-                hospital = hospital
+                patient_name=name,
+                hospital=hospital,
+                phone=phone,
+                department=Department.objects.get(id=int(department)),
             )
 
             booking.save()
             return HttpResponseRedirect(reverse("bookings"))
- 
+
         except Exception as err:
-            print('There are exceptions ', str(err))
-            return render(request, self.template_name, {"name": hospital.name, "logo": hospital.logo.url})
+            print("There are exceptions ", str(err))
+            return render(
+                request,
+                self.template_name,
+                {
+                    "departments": departments,
+                    "name": hospital.name,
+                    "logo": hospital.logo.url,
+                },
+            )
+
 
 addbooking = AddBooking.as_view()
 
+
 class ChangePassword(View):
-    template_name = 'changepassword.html'
+    template_name = "changepassword.html"
 
     @method_decorator(login_required(login_url="/login"))
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
 
-
     def get(self, request):
         hospital = self.request.user.hospital
-        return render(request, self.template_name, {"name": hospital.name, "logo": hospital.logo.url})
-    
+        return render(
+            request,
+            self.template_name,
+            {"name": hospital.name, "logo": hospital.logo.url},
+        )
+
     def post(self, request):
-        password = request.POST.get('password')
-        password1 = request.POST.get('password1')
-        password2 = request.POST.get('password2')
+        password = request.POST.get("password")
+        password1 = request.POST.get("password1")
+        password2 = request.POST.get("password2")
         user = self.request.user
         hospital = user.hospital
 
-       
-        if (password1 != password2):
-            print('failed password is not the same')
-            return render(request, self.template_name, {"message": "Password didn\'t match", "name": hospital.name, "logo": hospital.logo.url})
+        if password1 != password2:
+            print("failed password is not the same")
+            return render(
+                request,
+                self.template_name,
+                {
+                    "message": "Password didn't match",
+                    "name": hospital.name,
+                    "logo": hospital.logo.url,
+                },
+            )
 
-        if (len(password1.strip()) < 6):
-            print('failed password should be greater that 6')
-            return render(request, self.template_name, {"message": "Use longer password more than 6 characters is required", "name": hospital.name, "logo": hospital.logo.url})
+        if len(password1.strip()) < 6:
+            print("failed password should be greater that 6")
+            return render(
+                request,
+                self.template_name,
+                {
+                    "message": "Use longer password more than 6 characters is required",
+                    "name": hospital.name,
+                    "logo": hospital.logo.url,
+                },
+            )
 
         if user.check_password(password):
             user.password = make_password(password1)
@@ -386,34 +531,45 @@ class ChangePassword(View):
             return HttpResponseRedirect(reverse("dashboard"))
 
         # this means the old password is invalid..
-        return render(request, self.template_name, {"name": hospital.name, "logo": hospital.logo.url})
+        return render(
+            request,
+            self.template_name,
+            {"name": hospital.name, "logo": hospital.logo.url},
+        )
 
 
 change_password = ChangePassword.as_view()
 
+
 class EditProfile(View):
-    template_name = 'editprofile.html'
+    template_name = "editprofile.html"
 
     @method_decorator(login_required(login_url="/login"))
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
 
-
     def get(self, request):
         hospital = self.request.user.hospital
-        return render(request, self.template_name, {"address": hospital.physical_address, "name": hospital.name, "logo": hospital.logo.url})
-
+        return render(
+            request,
+            self.template_name,
+            {
+                "address": hospital.physical_address,
+                "name": hospital.name,
+                "logo": hospital.logo.url,
+            },
+        )
 
     def post(self, request):
         hospital = self.request.user.hospital
         try:
-            logo = request.FILES.get('logo', None)
-            address = request.POST.get('address', None)
-            brand = request.POST.get('brand', None)
+            logo = request.FILES.get("logo", None)
+            address = request.POST.get("address", None)
+            brand = request.POST.get("brand", None)
 
             hospital.name = brand
-            print('this is logo ', logo)
-            if (logo != 'null' and logo != None):
+            print("this is logo ", logo)
+            if logo != "null" and logo != None:
                 hospital.logo = logo
             hospital.physical_address = address
 
@@ -423,13 +579,23 @@ class EditProfile(View):
             hospital.save()
 
             return HttpResponseRedirect(reverse("dashboard"))
-        
+
         except Exception as err:
-            print('this is exception ', err)
-            return render(request, self.template_name, {"errors": str(err), "address": hospital.physical_address, "name": hospital.name, "logo": hospital.logo.url})
+            print("this is exception ", err)
+            return render(
+                request,
+                self.template_name,
+                {
+                    "errors": str(err),
+                    "address": hospital.physical_address,
+                    "name": hospital.name,
+                    "logo": hospital.logo.url,
+                },
+            )
 
 
 edit_profile = EditProfile.as_view()
+
 
 class EditPatient(View):
     template_name = "editpatient.html"
@@ -438,7 +604,6 @@ class EditPatient(View):
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
 
-
     def get(self, request, *args, **kwargs):
         patient_id = self.kwargs.get("pid")
         patient = Patient.objects.get(id=int(patient_id))
@@ -446,7 +611,17 @@ class EditPatient(View):
         departments = hospital.departments.all()
         # doctors = Doctor.objects.all()
         doctors = hospital.madokta.all()
-        return render(request, self.template_name, {"departments": departments, "target": patient, "doctors": doctors, "name": hospital.name, "logo": hospital.logo.url})
+        return render(
+            request,
+            self.template_name,
+            {
+                "departments": departments,
+                "target": patient,
+                "doctors": doctors,
+                "name": hospital.name,
+                "logo": hospital.logo.url,
+            },
+        )
 
     def post(self, request, *args, **kwargs):
         patient_id = self.kwargs.get("pid")
@@ -457,8 +632,8 @@ class EditPatient(View):
         status = request.POST.get("status", None)
         doctor_id = request.POST.get("doctor", None)
         department = request.POST.get("department", None)
-        isuse_nhif = request.POST.get('isusingnhif')
-        print('STATUS ', status)
+        isuse_nhif = request.POST.get("isusingnhif")
+        print("STATUS ", status)
         departments = hospital.departments.all()
         isuse_nhif = True if isuse_nhif == "on" else False
         try:
@@ -472,17 +647,26 @@ class EditPatient(View):
             return HttpResponseRedirect(reverse("dashboard"))
 
         except Exception as err:
-            print('error ', err)
-            return render(request, self.template_name, {"departments": departments, "target": patient, "doctors": doctors, "name": hospital.name, "logo": hospital.logo.url})
+            print("error ", err)
+            return render(
+                request,
+                self.template_name,
+                {
+                    "departments": departments,
+                    "target": patient,
+                    "doctors": doctors,
+                    "name": hospital.name,
+                    "logo": hospital.logo.url,
+                },
+            )
 
-
-            
 
 edit_patient = EditPatient.as_view()
 
+
 class AddPatient(View):
     template_name = "addpatient.html"
-    
+
     @method_decorator(login_required(login_url="/login"))
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
@@ -491,34 +675,52 @@ class AddPatient(View):
         hospital = self.request.user.hospital
         doctors = hospital.madokta.all()
         departments = hospital.departments.all()
-        return render(request, self.template_name, {"departments": departments, "doctors": doctors, "name": hospital.name, "logo": hospital.logo.url})
-    
+        return render(
+            request,
+            self.template_name,
+            {
+                "departments": departments,
+                "doctors": doctors,
+                "name": hospital.name,
+                "logo": hospital.logo.url,
+            },
+        )
+
     def post(self, request):
         doctors = Doctor.objects.all()
-        name = request.POST.get('name', None)
-        doctor = request.POST.get('doctor', None)
+        name = request.POST.get("name", None)
+        doctor = request.POST.get("doctor", None)
         hospital = request.user.hospital
-        department = request.POST.get('department', None)
-        isuse_nhif = request.POST.get('isusingnhif')
+        department = request.POST.get("department", None)
+        isuse_nhif = request.POST.get("isusingnhif")
         departments = hospital.departments.all()
-        print('this radio button ', isuse_nhif)
+        print("this radio button ", isuse_nhif)
         isuse_nhif = True if isuse_nhif == "on" else False
         try:
             patient = Patient.objects.create(
-                name = name,
-                doctor = Doctor.objects.get(id=int(doctor)),
-                is_using_NHIF = isuse_nhif,
-                status = "Pending",
-                hospital = hospital,
-                department = Department.objects.get(id=int(department))
+                name=name,
+                doctor=Doctor.objects.get(id=int(doctor)),
+                is_using_NHIF=isuse_nhif,
+                status="Pending",
+                hospital=hospital,
+                department=Department.objects.get(id=int(department)),
             )
 
             patient.save()
             return HttpResponseRedirect(reverse("dashboard"))
 
         except Exception as err:
-            print('error is ', err)
-            return render(request, self.template_name, {"departments": departments, "doctors": doctors, "name": hospital.name, "logo": hospital.logo.url})
+            print("error is ", err)
+            return render(
+                request,
+                self.template_name,
+                {
+                    "departments": departments,
+                    "doctors": doctors,
+                    "name": hospital.name,
+                    "logo": hospital.logo.url,
+                },
+            )
 
 
 add_patient = AddPatient.as_view()
@@ -528,18 +730,23 @@ class HospitalDetails(View):
     template_name = "viewdetails.html"
 
     def get(self, request, *args, **kwargs):
-        hospital_id = self.kwargs.get('hid')
+        hospital_id = self.kwargs.get("hid")
         hospital = Hospital.objects.get(id=int(hospital_id))
 
         department_metadata = []
         for department in hospital.departments.all():
-            department_metadata.append({
-                "name": department.name,
-                "hospital": hospital.name,
-                "id": hospital.id,
-                "queue": department.patients.all().filter(status = "Pending").count(),
-                "doctors": department.doctors.all().count()
-            })
+            department_metadata.append(
+                {
+                    "name": department.name,
+                    "hospital": hospital.name,
+                    "id": hospital.id,
+                    "queue": department.patients.all().filter(status="Pending").count(),
+                    "doctors": department.doctors.all().count(),
+                    "pbooking": department.bukings.all()
+                    .filter(status="Pending")
+                    .count(),
+                }
+            )
         print("TOTAL DEPARTMENTS ", hospital.departments.all())
         metadata = {
             "name": hospital.name,
@@ -547,14 +754,17 @@ class HospitalDetails(View):
             "department": department_metadata,
             "address": hospital.physical_address,
             "total_departments": hospital.departments.all().count(),
-            "queue": hospital.wagonjwa.all().filter(status = "Pending").count(),
-            "pbookings": hospital.bookings.all().filter(status = 'Pending').count(),
-
+            "queue": hospital.wagonjwa.all().filter(status="Pending").count(),
+            "pbookings": hospital.bookings.all().filter(status="Pending").count(),
         }
 
-        return render(request, self.template_name, {"hospital": hospital, "metadata": metadata})
+        return render(
+            request, self.template_name, {"hospital": hospital, "metadata": metadata}
+        )
+
 
 hospital_details = HospitalDetails.as_view()
+
 
 class EditDoctor(View):
     template_name = "editdoctor.html"
@@ -564,15 +774,27 @@ class EditDoctor(View):
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        doctor_id = self.kwargs.get('did')
+        doctor_id = self.kwargs.get("did")
         hospital = self.request.user.hospital
         departments = hospital.departments.all()
         doctor_tochange = Doctor.objects.get(id=int(doctor_id))
-        return render(request, self.template_name, {"did": doctor_tochange.department.id if doctor_tochange.department else 1, "departments": departments, "tochange": doctor_tochange, "name": hospital.name, "logo": hospital.logo.url})
-    
+        return render(
+            request,
+            self.template_name,
+            {
+                "did": doctor_tochange.department.id
+                if doctor_tochange.department
+                else 1,
+                "departments": departments,
+                "tochange": doctor_tochange,
+                "name": hospital.name,
+                "logo": hospital.logo.url,
+            },
+        )
+
     def post(self, request, *args, **kwargs):
         name = request.POST.get("name")
-        doctor_id = self.kwargs.get('did')
+        doctor_id = self.kwargs.get("did")
         hospital = self.request.user.hospital
         departments = hospital.departments.all()
         doctor_tochange = Doctor.objects.get(id=int(doctor_id))
@@ -583,11 +805,25 @@ class EditDoctor(View):
             doctor_tochange.department = Department.objects.get(id=int(department))
             doctor_tochange.save()
             return HttpResponseRedirect(reverse("doctors"))
-        
+
         except:
-            return render(request, self.template_name, {"did": doctor_tochange.department.id if doctor_tochange.department else 1, "departments": departments, "tochange": doctor_tochange, "name": hospital.name, "logo": hospital.logo.url})
+            return render(
+                request,
+                self.template_name,
+                {
+                    "did": doctor_tochange.department.id
+                    if doctor_tochange.department
+                    else 1,
+                    "departments": departments,
+                    "tochange": doctor_tochange,
+                    "name": hospital.name,
+                    "logo": hospital.logo.url,
+                },
+            )
+
 
 edit_doctor = EditDoctor.as_view()
+
 
 class EditDepartment(View):
     template_name = "editdepartment.html"
@@ -596,16 +832,23 @@ class EditDepartment(View):
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
 
-
     def get(self, request, *args, **kwargs):
-        department_id = self.kwargs.get('did')
+        department_id = self.kwargs.get("did")
         hospital = self.request.user.hospital
         department_tochange = Department.objects.get(id=int(department_id))
-        return render(request, self.template_name, {"tochange": department_tochange, "name": hospital.name, "logo": hospital.logo.url})
+        return render(
+            request,
+            self.template_name,
+            {
+                "tochange": department_tochange,
+                "name": hospital.name,
+                "logo": hospital.logo.url,
+            },
+        )
 
     def post(self, request, *args, **kwargs):
         name = request.POST.get("name")
-        department_id = self.kwargs.get('did')
+        department_id = self.kwargs.get("did")
         hospital = self.request.user.hospital
         department_tochange = Department.objects.get(id=int(department_id))
 
@@ -614,15 +857,25 @@ class EditDepartment(View):
             department_tochange.save()
 
             return HttpResponseRedirect(reverse("departments"))
-        
+
         except:
-            return render(request, self.template_name, {"tochange": department_tochange, "name": hospital.name, "logo": hospital.logo.url})
-        
+            return render(
+                request,
+                self.template_name,
+                {
+                    "tochange": department_tochange,
+                    "name": hospital.name,
+                    "logo": hospital.logo.url,
+                },
+            )
+
+
 edit_department = EditDepartment.as_view()
+
 
 class AddDoctor(View):
     template_name = "adddoctor.html"
-    
+
     @method_decorator(login_required(login_url="/login"))
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
@@ -630,29 +883,43 @@ class AddDoctor(View):
     def get(self, request):
         hospital = self.request.user.hospital
         departments = hospital.departments.all()
-        return render(request, self.template_name, {"departments": departments, "name": hospital.name, "logo": hospital.logo.url})
+        return render(
+            request,
+            self.template_name,
+            {
+                "departments": departments,
+                "name": hospital.name,
+                "logo": hospital.logo.url,
+            },
+        )
 
     def post(self, request):
         hospital = request.user.hospital
         name = request.POST.get("name", None)
-        department = request.POST.get('department', None)
+        department = request.POST.get("department", None)
         departments = hospital.departments.all()
         print("CREATE DOCTOR RECEIVED DEPARMENT ", departments)
         try:
             doctor = Doctor.objects.create(
-                hospital = hospital,
-                name = name,
-                department = Department.objects.get(id=int(department))
-
+                hospital=hospital,
+                name=name,
+                department=Department.objects.get(id=int(department)),
             )
 
             doctor.save()
 
             return HttpResponseRedirect(reverse("doctors"))
-        
+
         except Exception as err:
-            return render(request, self.template_name, {"departments": departments, "name": hospital.name, "logo": hospital.logo.url})
-            
+            return render(
+                request,
+                self.template_name,
+                {
+                    "departments": departments,
+                    "name": hospital.name,
+                    "logo": hospital.logo.url,
+                },
+            )
 
 
 add_doctor = AddDoctor.as_view()
@@ -663,45 +930,49 @@ class LoginView(View):
 
     def get(self, request):
         return render(request, self.template_name)
-    
-    def post(self, request):
-        email = request.POST.get('email', None)
-        password = request.POST.get('password', None)
 
-        if (email and password):
+    def post(self, request):
+        email = request.POST.get("email", None)
+        password = request.POST.get("password", None)
+
+        if email and password:
             check = get_user_model().objects.filter(email=email)
 
-            if (check.count() > 0):
+            if check.count() > 0:
                 user = authenticate(request, username=email, password=password)
 
                 if user is not None:
-                    if hasattr(user, 'hospital'):
-                        if (user.hospital.is_profile_completed == False):
-                            return HttpResponseRedirect(reverse('completeprofilehospital'))
-                        
-                        if (user.hospital.is_approved == False):
-                            return HttpResponseRedirect(reverse('waitingverification'))
-                        
+                    if hasattr(user, "hospital"):
+                        if user.hospital.is_profile_completed == False:
+                            return HttpResponseRedirect(
+                                reverse("completeprofilehospital")
+                            )
+
+                        if user.hospital.is_approved == False:
+                            return HttpResponseRedirect(reverse("waitingverification"))
+
                         login(request, user)
-                        return HttpResponseRedirect(reverse('dashboard'))
-                    
-                    if (user.is_superuser):
+                        return HttpResponseRedirect(reverse("dashboard"))
+
+                    if user.is_superuser:
                         login(request, user)
-                        return HttpResponseRedirect('/admin')
+                        return HttpResponseRedirect("/admin")
                 else:
-                    return render(request, self.template_name, {"message": 'Unable to login incorrect credentials'})
-            
+                    return render(
+                        request,
+                        self.template_name,
+                        {"message": "Unable to login incorrect credentials"},
+                    )
+
             else:
-                return render(request, self.template_name, {"message": 'User does not exist'})
-        
+                return render(
+                    request, self.template_name, {"message": "User does not exist"}
+                )
+
         else:
-            return render(request, self.template_name, {"message": "We don't accept empty fields"})
+            return render(
+                request, self.template_name, {"message": "We don't accept empty fields"}
+            )
 
-                
 
-                        
-
-    
 login_view = LoginView.as_view()
-                
-

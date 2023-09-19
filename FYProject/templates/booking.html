@@ -162,11 +162,13 @@
               </div>
               <div class="table-responsive">
                   {% if infolen > 0 %}
-                  <table id="tableView" class="table text-center align-middle table-bordered table-hover mb-0">
+                  <table id="tableView" class="table align-middle table-bordered table-hover mb-0">
                       <thead>
                           <tr class="">
                               <th scope="col" class="text-start">Booked by</th>
                               <th scope="col" class="text-center">Status</th>
+                              <th scope="col" class="text-center">Department</th>
+                              <th scope="col" class="text-start">Phone</th>
                               <th scope="col" class="text-center">Action</th>
                           </tr>
                       </thead>
@@ -175,7 +177,8 @@
                           <tr>
                               <td class="text-start">{{booking.patient_name}}</td>
                               <td class="text-center">{{booking.status}}</td>
-                            
+                              <td class="text-center">{{booking.department.name}}</td>
+                              <td class="text-start">{{booking.phone}}</td>
                               <td class="text-center"><a href={% url 'editbooking' bid=booking.id %} class="btn btn-sm btn-success" style="background: #0f61ef" href="">View & Edit</a></td>
                           </tr>
                           {% endfor %}

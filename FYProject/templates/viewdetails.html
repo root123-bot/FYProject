@@ -81,6 +81,7 @@
                       <th scope="col" class="text-start">Department name</th>
                       <th scope="col" class="text-start">Total Patients</th>
                       <th scope="col" class="text-start">Total Doctors</th>
+                      <th scope="col" class="text-start">Pending Bookings</th>
                       
                   </tr>
               </thead>
@@ -90,6 +91,8 @@
                       <td class="text-start">{{info.name | title}}</td>
                       <td class="text-start">{{info.queue}}</td>
                       <td class="text-start">{{info.doctors}}</td>
+                      <td class="text-start">{{info.pbooking}}</td>
+                      
                   </tr>
                   {% endfor %}
               </tbody> 
@@ -160,28 +163,7 @@
           $('#tableView').DataTable( {
               "aLengthMenu": [[10, 25, 50, 100], [10, 25, 50, 100]],
               dom: 'Bfrtip',
-              buttons: [{
-                  extend: 'csv',
-                  className: 'btn btn-default',
-                  exportOptions: {
-                      columns: ':not(.notexport)'
-                  }
-              },
-              {
-                  extend: 'excel',
-                  className: 'btn btn-default',
-                  exportOptions: {
-                      columns: ':not(.notexport)'
-                  }
-              },
-            
-              {
-                  extend: 'print',
-                  className: 'btn btn-default',
-                  exportOptions: {
-                      columns: ':not(.notexport)'
-                  }
-              }
+              buttons: [
               ], 
           } );
       } );

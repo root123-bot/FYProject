@@ -63,6 +63,15 @@
                       required
                     />
                   </div>
+                  <!-- <div style="display: flex; justify-content: space-between;"> -->
+                  <div class="form-group mb-3" style="margin-bottom: 0; padding-bottom: 0;">
+                    <label class="label my-0 py-0">Upload License</label>
+                    <small style="display: block; margin: 0; padding: 0">Click box below to select file</small>
+                    <input accept="image/*" type="file" id="license" style="display: none", name="license" />
+                    <label for="license" style="width: 200px; height: 150px; background-color: grey; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                        <img id="loadedlicense" src="{% static 'Hospital/images/add-image.png' %}" alt="license" style="width: 80px; height: 80px; object-position: center; z-index: 1000;"/>
+                    </label>
+                  </div>
                   
                   <div class="form-group mb-3" style="margin-bottom: 0; padding-bottom: 0;">
                     <label class="label my-0 py-0">Upload Logo/picture</label>
@@ -72,6 +81,10 @@
                         <img id="loadedimg" src="{% static 'Hospital/images/add-image.png' %}" alt="logo" style="width: 80px; height: 80px; object-position: center; z-index: 1000;"/>
                     </label>
                   </div>
+                  <div id="error-container" style="color: red; text-align: center; margin-bottom: 10px;">
+                    {{error}}
+                  </div>
+                <!-- </div> -->
                   <div class="form-group">
                     <button
                       type="submit"
@@ -91,6 +104,16 @@
         </div>
       </div>
     </section>
+
+    <script>
+      // just display the error message for 5 seconds
+      const errorContainer = document.getElementById("error-container")
+      if (errorContainer.innerHTML !== "") {
+        setTimeout(() => {
+          errorContainer.innerHTML = ""
+        }, 5000)
+      }
+    </script>
     <script>
       
       photo = document.getElementById("logo");
@@ -124,6 +147,41 @@
       });
 
     </script>
+
+    <script>
+          
+      photo1 = document.getElementById("license");
+      photolabel1 = photo1.nextSibling.nextSibling;
+      console.log('photo ', photo1, photolabel1)
+      photo1.addEventListener("change", ({ target }) => {
+        console.log("changed ");
+        const file1 = target.files[0];
+        let loadedimg1 = document.getElementById("loadedlicense");
+        if (file1 && file1.type.substr(0, 5) === "image") {
+          const reader1 = new FileReader();
+          loadedimg1.parentNode.removeChild(loadedimg1);
+          reader1.onloadend = () => {
+            img1 = document.createElement("img");
+            img1.id = "loadedlicense";
+            img1.src = reader1.result;
+            img1.style.width = "100%";
+            img1.style.height = "100%";
+            photolabel1.appendChild(img1);
+          };
+          reader1.readAsDataURL(file1);
+        } else {
+          loadedimg1.parentNode.removeChild(loadedimg1);
+          img1 = document.createElement("img");
+          img1.id = "loadedlicense";
+          img1.src = "{% static 'mkulima/images/error.png' %}";
+          img1.style.width = "100%";
+          img1.style.height = "100%";
+          photolabel1.appendChild(img1);
+        }
+      });
+
+    </script>
+
     <script>
       const flashElem = document.getElementById("flashmessage")
 
@@ -137,11 +195,11 @@
       const addressElem = document.getElementById("address")
       const brandElem = document.getElementById("brandname")
       const logoElem = document.getElementById("logo")
-      const logoElem = document.getElementById("doctors")
+      const licenseElem = document.getElementById("license")
+      // const logoElem = document.getElementById("doctors")
       formElem.addEventListener("submit", (_) => {
         _.preventDefault()
         console.log('form to submit ', addressElem.value, brandElem.value, logoElem.value)
-
 
         formElem.submit()
       })

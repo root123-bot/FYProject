@@ -170,6 +170,21 @@
                         aria-describedby="emailHelp">
                    
                 </div>
+                <div class="mb-3 col-12 col-md-6 col-sm-12 col-lg-6 col-xl-6">
+                  <label for="phone" class="form-label">Phone number</label>
+                  <input minlength="10" maxlength="10" placeholder="0XXXXXXXXX" style="background: #0fe0ef; border: 1px solid #6c7293" value="" type="text"  class="form-control" name="phone" id="phone"
+                      aria-describedby="emailHelp">
+                </div>
+                <div class="mb-3 col-12 col-md-6  col-sm-12 col-lg-6 col-xl-6">
+                  <label for="department" class="form-label">Department</label>
+                  <select style="background: #0fe0ef; border: 1px solid #6c7293" id="department" name="department" class="form-select mb-3" aria-label="Default select example">
+                      <option selected>Open this select menu</option>
+                      {% for department in departments %}
+                      <option value="{{department.id}}">{{department.name}}</option>
+                      {% endfor %}
+                  </select>
+                  <a href={% url 'adddepartment' %} style="text-decoration: underline; color: #0f61ef">add new department</a>
+                </div>
                 
                 </div>
               </div>
@@ -191,15 +206,16 @@
     <script>
         const formElem = document.getElementById("add-booking")
         const fullNameInput = document.getElementById("name")
+        const phoneInput = document.getElementById("phone")
         // const doctorInput = document.getElementById("doctor")
         // const departmentInput = document.getElementById("department")
         // const checkInput = document.getElementById("check")
        
         formElem.addEventListener("submit", (_) => {
           _.preventDefault()
-          if (fullNameInput.value.trim().length < 1 ) {
+          if (fullNameInput.value.trim().length < 1 || phoneInput.value.trim().length !== 10 || isNaN(+phoneInput.value.trim())) {
 
-            console.log('You have posted nothing...')
+            alert('Failed, invalid data provided...')
             return;
           }
 
