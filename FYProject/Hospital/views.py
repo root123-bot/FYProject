@@ -726,6 +726,23 @@ class AddPatient(View):
 add_patient = AddPatient.as_view()
 
 
+class MyBooking(View):
+    template_name = "mybookings.html"
+
+    @method_decorator(login_required(login_url="/login"))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request):
+        return render(
+            request,
+            self.template_name,
+        )
+
+
+mybooking = MyBooking.as_view()
+
+
 class HospitalDetails(View):
     template_name = "viewdetails.html"
 
@@ -738,6 +755,7 @@ class HospitalDetails(View):
             department_metadata.append(
                 {
                     "name": department.name,
+                    "did": department.id,
                     "hospital": hospital.name,
                     "id": hospital.id,
                     "queue": department.patients.all().filter(status="Pending").count(),
@@ -761,6 +779,60 @@ class HospitalDetails(View):
         return render(
             request, self.template_name, {"hospital": hospital, "metadata": metadata}
         )
+
+    def post(self, request, *args, **kwargs):
+        hospital_id = self.kwargs.get("hid")
+        hospital = Hospital.objects.get(id=int(hospital_id))
+        name = request.POST.get("name", None)
+        phone = request.POST.get("phone", None)
+        department = request.POST.get("department", None)
+        print("this is department ", department)
+        try:
+            booking = HospitalBooking.objects.create(
+                patient_name=name,
+                hospital=hospital,
+                phone=phone,
+                department=Department.objects.get(id=int(department)),
+            )
+
+            booking.save()
+            return HttpResponseRedirect(reverse("mybookings"))
+
+        except Exception as err:
+            print("error is ", err)
+            department_metadata = []
+            for department in hospital.departments.all():
+                department_metadata.append(
+                    {
+                        "name": department.name,
+                        "hospital": hospital.name,
+                        "did": department.id,
+                        "id": hospital.id,
+                        "queue": department.patients.all()
+                        .filter(status="Pending")
+                        .count(),
+                        "doctors": department.doctors.all().count(),
+                        "pbooking": department.bukings.all()
+                        .filter(status="Pending")
+                        .count(),
+                    }
+                )
+            print("TOTAL DEPARTMENTS ", hospital.departments.all())
+            metadata = {
+                "name": hospital.name,
+                "logo": hospital.logo.url,
+                "department": department_metadata,
+                "address": hospital.physical_address,
+                "total_departments": hospital.departments.all().count(),
+                "queue": hospital.wagonjwa.all().filter(status="Pending").count(),
+                "pbookings": hospital.bookings.all().filter(status="Pending").count(),
+            }
+
+            return render(
+                request,
+                self.template_name,
+                {"hospital": hospital, "metadata": metadata, "error": str(err)},
+            )
 
 
 hospital_details = HospitalDetails.as_view()

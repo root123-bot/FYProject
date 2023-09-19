@@ -58,14 +58,19 @@
   </head>
 
   <body style="background-color: #fff;">
-    <div class="my-5 mx-5" style="width: 70%;">
-      <div style="display: flex;">
-        <img src="{{metadata.logo}}" style="border-radius: 75px;" width="120px" height="120px" />
-        <div style="margin-top: 15px; margin-left: 15px;">
-          <p style="margin-bottom: 0px; padding-bottom: 0px; font-weight: bold;">{{hospital.name}}</p>
-          <p style="margin-top: 0px; padding-top: 0px; margin-bottom: 0px; padding-bottom: 0px;"><span style="font-weight: bold;">Location: </span> {{metadata.address}}</p>
-          <p style="margin-top: 0px; padding-top: 0px; margin-bottom: 0px; padding-bottom: 0px;"><span style="font-weight: bold;">Total patients in queue: </span> {{metadata.queue}}</p>
-          <p style="margin-top: 0px; padding-top: 0px;"><span style="font-weight: bold;">Pending Bookings: </span> {{metadata.pbookings}}</p>
+    <div class="my-5 mx-5" style="width: 70%;" id="main">
+      <div style="display: flex; justify-content: space-between;"> 
+        <div style="display: flex;">
+          <img src="{{metadata.logo}}" style="border-radius: 75px;" width="120px" height="120px" />
+          <div style="margin-top: 15px; margin-left: 15px;">
+            <p style="margin-bottom: 0px; padding-bottom: 0px; font-weight: bold;">{{hospital.name}}</p>
+            <p style="margin-top: 0px; padding-top: 0px; margin-bottom: 0px; padding-bottom: 0px;"><span style="font-weight: bold;">Location: </span> {{metadata.address}}</p>
+            <p style="margin-top: 0px; padding-top: 0px; margin-bottom: 0px; padding-bottom: 0px;"><span style="font-weight: bold;">Total patients in queue: </span> {{metadata.queue}}</p>
+            <p style="margin-top: 0px; padding-top: 0px;"><span style="font-weight: bold;">Pending Bookings: </span> {{metadata.pbookings}}</p>
+          </div>
+        </div>
+        <div>
+          <button class="btn btn-primary" style="cursor: pointer;" id="booknow">Book now</button>
         </div>
       </div>
       <hr />
@@ -102,27 +107,103 @@
       </div>
       {% endif %}
     </div>
+    <!-- this is div to make the user add the booking after user add the booking lets store them in the browser storage... -->
+    <div id="bookcontainer" style="display: none; width: 800px; padding: 10px; height: 400px; position: absolute; background-color: grey; border-radius: 15px; position: absolute; top: 120px; left: 100px">
+      <h5 style="text-align: center;">Provide information to book</h5>
+      <span style="position: absolute; top: 10px; right: 10px; color: red;">
+        <img style="cursor: pointer;" id="closebtn" src="{% static 'Hospital/images/close.png'  %}" height="20px" width="20px" />
+      </span>
+      <hr />
+      <form method="POST" id=""add-booking>
+        {% csrf_token %}
+        <div style="display: flex; justify-content: space-between;">
+          <div class="mb-3 col-12 col-md-6 col-sm-12 col-lg-6 col-xl-6" style="width: 48%;">
+            <label for="name" class="form-label" style="color: white; margin-bottom: 0px; padding-bottom: 0px;">Full name</label>
+            <input style="background: #fff; border: 1px solid #6c7293" type="text"  class="form-control" name="name" id="name"
+                aria-describedby="emailHelp">
+          </div>
+          <div class="mb-3 col-12 col-md-6 col-sm-12 col-lg-6 col-xl-6" style="width: 48%;">
+            <label for="phone" class="form-label" style="color: white; margin-bottom: 0px; padding-bottom: 0px;">Phone number</label>
+            <input minlength="10" maxlength="10" placeholder="0XXXXXXXXX" style="background: #fff; border: 1px solid #6c7293" value="" type="text"  class="form-control" name="phone" id="phone"
+                aria-describedby="emailHelp">
+          </div>
+        </div>
+        <div>
+          <div class="mb-3 col-12 col-md-6  col-sm-12 col-lg-6 col-xl-6" style="width: 48%;">
+            <label for="department" class="form-label" style="color: white;">Department</label>
+            <select style="background: #fff; border: 1px solid #6c7293;" id="department" name="department" class="form-select mb-3" aria-label="Default select example">
+                <option selected>Open this select menu</option>
+                {% for department in metadata.department %}
+                <option value="{{department.did}}">{{department.name | title}}</option>
+                {% endfor %}
+            </select>
+          </div>
+        </div>
+        <button style="cursor: pointer;" type="submit" class="btn btn-secondary" id="check">Book Now</button>
+      </form>
+    </div>  
     <script>
-        
+
     </script>
 
     <script>
-        const formElem = document.getElementById("create-patient")
+        main = document.getElementById("main")
+        bcontainer = document.getElementById("bookcontainer")
+        closebtn = document.getElementById("closebtn")
+        department = document.getElementById("department")
+        name = document.getElementById("name")
+        phone = document.getElementById("phone")
+        document.getElementById("booknow").addEventListener("click", () => {
+          main.style.pointerEvents = "none";
+          main.style.opacity = "0.2";
+          bcontainer.style.display = "block";
+          department.value = "Open this select menu";
+          name.value = "";
+          phone.value = "";
+        })
+
+        closebtn.addEventListener("click", () => {
+          main.style.pointerEvents = "auto";
+          main.style.opacity = "1";
+          bcontainer.style.display = "none";
+
+        })
+    </script>
+
+    <script>
+        const formElem = document.getElementById("add-booking")
         const fullNameInput = document.getElementById("name")
-        const doctorInput = document.getElementById("doctor")
+        const phoneInput = document.getElementById("phone")
         const department = document.getElementById("department")
-        const checkInput = document.getElementById("check")
+        // const doctorInput = document.getElementById("doctor")
+        // const departmentInput = document.getElementById("department")
+        // const checkInput = document.getElementById("check")
        
         formElem.addEventListener("submit", (_) => {
+          console.log("someone need to submit the form")
           _.preventDefault()
-          console.log('form to submit ', fullNameInput.value, doctorInput.value, checkInput.checked)
-          console.log('i failed to validate the fullNameInput if nothing passed')
-          if (fullNameInput.value.trim().length < 1 || doctorInput.value === "Open this select menu") {
+          if (fullNameInput.value.trim().length < 1 || phoneInput.value.trim().length !== 10 || isNaN(+phoneInput.value.trim()) || department.value.trim() === "Open this select menu") {
 
-            console.log('You have posted nothing...')
+            alert('Failed, invalid data provided...')
             return;
           }
 
+          // lets store name, phone, department in object in the browser storage...
+          let booking = {
+            name: fullNameInput.value.trim(),
+            phone: phoneInput.value.trim(),
+            department: department.value.trim(),
+            created_at: new Date().toISOString()
+          }
+          // let first add booking to existing bookings found in browser storage
+          let bookings = JSON.parse(localStorage.getItem("booking"))
+          if (bookings) {
+            bookings.push(booking)
+          } else {
+            bookings = [booking]
+          }
+
+          localStorage.setItem("booking", JSON.stringify(booking))
           formElem.submit()
 
         })

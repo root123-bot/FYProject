@@ -207,13 +207,14 @@
         const formElem = document.getElementById("add-booking")
         const fullNameInput = document.getElementById("name")
         const phoneInput = document.getElementById("phone")
+        const department = document.getElementById("department")
         // const doctorInput = document.getElementById("doctor")
         // const departmentInput = document.getElementById("department")
         // const checkInput = document.getElementById("check")
        
         formElem.addEventListener("submit", (_) => {
           _.preventDefault()
-          if (fullNameInput.value.trim().length < 1 || phoneInput.value.trim().length !== 10 || isNaN(+phoneInput.value.trim())) {
+          if (fullNameInput.value.trim().length < 1 || phoneInput.value.trim().length !== 10 || isNaN(+phoneInput.value.trim()) || department.value.trim() === "Open this select menu") {
 
             alert('Failed, invalid data provided...')
             return;
